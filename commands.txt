@@ -1,0 +1,8 @@
+docker swarm init
+
+docker stack deploy -c docker-compose.yml frappe
+
+docker service ls
+
+docker service logs frappe_frappe -f
+

@@ -1,0 +1,58 @@
+version: "3.8"
+
+services:
+  mariadb:
+    image: mariadb:10.8
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+      - --skip-innodb-read-only-compressed
+    environment:
+      MYSQL_ROOT_PASSWORD: 123
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    networks:
+      - frappe-net
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  redis:
+    image: redis:alpine
+    networks:
+      - frappe-net
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  frappe:
+    image: frappe/bench:latest
+    command: bash /workspace/init.sh
+    environment:
+      SHELL: /bin/bash
+    working_dir: /home/frappe
+    volumes:
+      - workspace-data:/workspace
+    ports:
+      - 8000:8000
+      - 9000:9000
+    networks:
+      - frappe-net
+    deploy:
+      mode: replicated
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+volumes:
+  mariadb-data:
+  workspace-data:
+
+networks:
+  frappe-net:
+    driver: overlay
